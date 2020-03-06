@@ -54,6 +54,13 @@ def delete_zero_coef_from_system(sys, zeros):
 
 
 def get_final_coef_from_system(sys: dict):
+    """
+    Сортируем по кол-ву коэффициентов
+    Выбираем из коэффициентов минимальной длинный самый частовстречаемый
+    Удаляем уравнения с этим коэффициентом
+    :param sys: Система
+    :return: Список коэффициентов
+    """
     res = []
     sort_key = sorted([k for k in sys.keys()], key=lambda k: len(sys[k][1]))
     for i, key in enumerate(sort_key):
