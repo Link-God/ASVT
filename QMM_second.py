@@ -128,14 +128,14 @@ def petrick_method(mat, else_impls):
 
 
 if __name__ == '__main__':
-    file_with_func = 'func.txt'
+    file_with_func = 'my.txt'
     func = read_func_from_file(file_with_func)
     list_of_true_numbers = sorted([int(term, base=2) for term in func])
     implicants = make_implicants_from_function(func)
     implicants_with_nums = [(implicant, nums_from_implicant(implicant)) for implicant in implicants]
     matrix = np.array(
         make_matrix([tup[1] for tup in implicants_with_nums], list_of_true_numbers))
-    pretty_table_to_file('out0.txt', matrix, implicants, func)
+    pretty_table_to_file('out0_my.txt', matrix, implicants, func)
     kernel_row_indexes = get_kernel_row_indexes(matrix)
     kernel_col_indexes = get_kernel_col_indexes(matrix, kernel_row_indexes)
     implicants_from_MDNF = [implicants[i] for i in kernel_row_indexes]
@@ -146,6 +146,6 @@ if __name__ == '__main__':
     else_implicants = [implicant for i, implicant in enumerate(else_implicants_with_zero_rows)
                        if i not in zero_row]
     else_terms = [term for i, term in enumerate(sorted(func)) if i not in kernel_col_indexes]
-    pretty_table_to_file('out11.txt', matrix_without_kernel, else_implicants, else_terms)
+    pretty_table_to_file('out1_my.txt', matrix_without_kernel, else_implicants, else_terms)
     additional_implicants = petrick_method(matrix_without_kernel, else_implicants)
     print(implicants_from_MDNF, additional_implicants)

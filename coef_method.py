@@ -40,9 +40,9 @@ def creat_set_of_zero_coef(sys):
 
 def delete_false_from_system(sys):
     set_key_for_del = set()
-    for kye, (val, _) in sys.items():
+    for key, (val, _) in sys.items():
         if not val:
-            set_key_for_del.add(kye)
+            set_key_for_del.add(key)
     for key in set_key_for_del:
         sys.pop(key)
 
@@ -55,25 +55,26 @@ def delete_zero_coef_from_system(sys, zeros):
 
 def get_final_coef_from_system(sys: dict):
     """
-    Сортируем по кол-ву коэффициентов
+    Сортируем по минимальному коэфициенту и их кол-ву
     Выбираем из коэффициентов минимальной длинный самый частовстречаемый
     Удаляем уравнения с этим коэффициентом
     :param sys: Система
     :return: Список коэффициентов
     """
     res = []
-    sort_key = sorted([k for k in sys.keys()], key=lambda k: len(sys[k][1]))
+    sort_key = sorted([k for k in sys.keys()], key=lambda k: len(min(sys[k][1], key=lambda tup: len(tup[0]))[0]))
+    sort_key.sort(key=lambda k: len(sys[k][1]))
     for i, key in enumerate(sort_key):
         if sys.get(key, None) is None:
             continue
         min_len = len(min(sys[key][1], key=lambda tup: len(tup[0]))[0])
-        all_min_el = [el for el in sys[key][1] if len(el[0]) == min_len]
+        all_min_el = sorted([el for el in sys[key][1] if len(el[0]) == min_len])
         min_el = all_min_el[0]
         if len(all_min_el) != 1:
             max_in_other = 0
-            cur_el_in_other = 0
             for el in all_min_el:
-                for other_key in sort_key[i + 1:]:
+                cur_el_in_other = 0
+                for other_key in sort_key:
                     if sys.get(other_key, None) is None:
                         continue
                     if el in sys[other_key][1]:
@@ -89,11 +90,11 @@ def get_final_coef_from_system(sys: dict):
 
 
 if __name__ == '__main__':
-    file_with_func = 'func.txt'
+    file_with_func = 'my.txt'
     func = read_func_from_file(file_with_func)
     system = create_system(func)
     set_of_zero_coef = creat_set_of_zero_coef(system)
     delete_false_from_system(system)
     delete_zero_coef_from_system(system, set_of_zero_coef)
     final_coef = get_final_coef_from_system(system)
-    pp(final_coef)
+    pp(sorted(final_coef))
