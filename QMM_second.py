@@ -7,11 +7,23 @@ import re
 
 
 def read_func_from_file(file_name):
+    """
+    Функция считывает из файла наборы на которых булева функция истина и возвращает их как список
+    :param file_name: Имя файла
+    :return: Список наборов на которых БФ = Истина
+    """
     with open(file_name) as f:
         return sorted([line.strip() for line in f.readlines()])
 
 
 def check_make_implicant(minterm1, minterm2):
+    """
+    Функция возвращает пару, первый элемент - истина если можно объединить минтермы в импликант, иначе - ложь
+    Второй элемент - индекс элемента по которому можно произвести объединение
+    :param minterm1: Первый минтерм
+    :param minterm2: Второй минтерм
+    :return: Пара bool (можно объеденить), int(где объеденить)
+    """
     counter = 0
     index = -1
     can_make = False
@@ -28,6 +40,11 @@ def check_make_implicant(minterm1, minterm2):
 
 # noinspection PyShadowingNames
 def make_implicants_from_function(func):
+    """
+    Функция по списку истинных значений возвращает список импликант, комбинирование которых невозможно
+    :param func:Список истиннных значений БФ
+    :return:Список финальных испликант
+    """
     cur_level_implicants = func[:]
     was_made_concatenation = True
     final_implicants = []
@@ -56,6 +73,13 @@ def make_implicants_from_function(func):
 
 
 def nums_from_implicant(implicant):
+    """
+    Вспомогательная функция оформления
+    Возвращает отсортированный список всех значений которые может содержать в себе имликант
+    Пример: 1~1 -> 101=5, 111=7 -> [5, 7]
+    :param implicant: Импликант
+    :return: Сортированный список "защифрованных значений"
+    """
     result = []
 
     def num_in_imp(imp: str, res: list):
@@ -71,6 +95,13 @@ def nums_from_implicant(implicant):
 
 
 def make_matrix(list_of_nums_in_row, columns):
+    """
+    Функция создает таблицу простых импликант (https://w.wiki/UK7 см тут шаг 2)
+    :param list_of_nums_in_row: Список позиций для каждой строки.
+     Позиция означает что импликант покрывает набор соответствующий столбцу
+    :param columns: Список столбцов, то есть десятичные представления наборов на которых функция истнинна
+    :return: Матрица простых импликантов
+    """
     res_matrix = []
     for i in range(len(list_of_nums_in_row)):
         row = [1 if num in list_of_nums_in_row[i] else 0 for num in columns]
@@ -79,6 +110,11 @@ def make_matrix(list_of_nums_in_row, columns):
 
 
 def get_kernel_row_indexes(mat):
+    """
+    Функция ищет и возвращает индексы строк ядра матрицы простых импликант
+    :param mat: Матрица простых импликант
+    :return: Индексы строк ядра
+    """
     swap_matrix = mat.swapaxes(0, 1)
     indexes = set()
     for j, arr in enumerate(swap_matrix):
@@ -88,6 +124,12 @@ def get_kernel_row_indexes(mat):
 
 
 def get_kernel_col_indexes(mat, row_indexes):
+    """
+    Функция ищет и возвращает индексы столбцов ядра матрицы простых импликант
+    :param mat: Матрица простых импликант
+    :param row_indexes: Индексы строк ядра
+    :return: Индексы столбцов ядра
+    """
     indexes = set()
     for row in (row for i, row in enumerate(mat) if i in row_indexes):
         columns = set(np.where(row == 1)[0])
@@ -96,6 +138,13 @@ def get_kernel_col_indexes(mat, row_indexes):
 
 
 def create_matrix_without_kernel(mat, row, col):
+    """
+    Функция создает и возвращает матрицу простых импликант без ядра
+    :param mat: Имхрдная матрица
+    :param row: Индексы строк ядра
+    :param col: Индексы столбцов ядра
+    :return: Матрица без ядра
+    """
     res_mat = np.array(mat)
     res_mat = np.delete(res_mat, list(row), axis=0)
     res_mat = np.delete(res_mat, list(col), axis=1)
@@ -103,11 +152,24 @@ def create_matrix_without_kernel(mat, row, col):
 
 
 def delete_zero_rows(mat):
+    """
+    Функция удаляет нулевые строки у матрицы
+    :param mat: Матрица
+    :return: Матрица без нулевых строк
+    """
     rows_num = np.where(~mat.any(axis=1))[0]
     return np.delete(mat, rows_num, axis=0), set(rows_num)
 
 
 def pretty_table_to_file(file_name, mat, impls, terms):
+    """
+    Функция печатает "красивую таблицу в файл"
+    :param file_name: Имя файла
+    :param mat: Матрица
+    :param impls: Импликанты
+    :param terms: Наборы на которых БФ = истина
+    :return:
+    """
     table = PrettyTable()
     table.field_names = ['impl'] + sorted(terms)
     for implicant, row in zip(impls, mat):
@@ -117,6 +179,14 @@ def pretty_table_to_file(file_name, mat, impls, terms):
 
 
 def petrick_method(mat, else_impls):
+    """
+    Функция реализует метод Петрика (см https://w.wiki/UKB)
+    (Метод Петрика — метод для получения всех минимальных ДНФ из таблицы простых импликант)
+    Помогает получить финальный ответ после учета и отбрасывания ядра таблицы простых импликант
+    :param mat: Таблица протсых импикант без ядра
+    :param else_impls: Оставшиеся испликанты
+    :return: Минимальное покрытие таблицы состоящее из импликантов
+    """
     symbols_tup = tuple(chr((ord('a') + i)) for i in range(len(mat)))
     col_mat = mat.swapaxes(0, 1)
     cnf = ['(' + ' | '.join(itertools.compress(symbols_tup, col)) + ')' for col in col_mat]
@@ -128,6 +198,10 @@ def petrick_method(mat, else_impls):
 
 
 if __name__ == '__main__':
+    """
+    Аналог main() в C++
+    Вызывает необходимые функции в нужно порядке, делая некторые дополнительные манипуляции с временными переменными
+    """
     file_with_func = 'my.txt'
     func = read_func_from_file(file_with_func)
     list_of_true_numbers = sorted([int(term, base=2) for term in func])

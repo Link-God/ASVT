@@ -3,16 +3,33 @@ from pprint import pp
 
 
 def powerset(n):
+    """
+    Возвращает все подмножества множетсва = {1, 2, ..., n}
+    :param n: Число n
+    :return: Подмножества
+    """
     s = range(n)
     return chain.from_iterable(combinations(s, r) for r in range(1, len(s) + 1))
 
 
 def read_func_from_file(file_name):
+    """
+    Функция читает из файла в виде списка наборы на которых БФ = истина
+    :param file_name: Имя файла
+    :return: Список наборов
+    """
     with open(file_name) as f:
         return sorted([line.strip() for line in f.readlines()])
 
 
 def create_coef_for_equation(num, n):
+    """
+    Функция создает верхнии и нижние коэффициенты для переменных в уравнении системы
+    (shorturl.at/suHMO) (Укороченая ссылка на бауманскую википедию с МНК)
+    :param num: Десятичное представление набора для данного уравнения
+    :param n:Количество переменных
+    :return: Индексы для уравнения в системе
+    """
     num_base2_as_str = bin(num)[2:].rjust(n, '0')
     equation = set()
     for tup in powerset(n):
@@ -23,6 +40,11 @@ def create_coef_for_equation(num, n):
 
 
 def create_system(f):
+    """
+    Функция создает систему уравнений
+    :param f: Булева Функция
+    :return: Словарь(хэш-таблица) <-> система
+    """
     set_of_true_nums = {int(num, base=2) for num in f}
     n = len(f[0])
     dict_sys = {num: (True if num in set_of_true_nums else False, create_coef_for_equation(num, n)) for num in
@@ -31,6 +53,12 @@ def create_system(f):
 
 
 def creat_set_of_zero_coef(sys):
+    """
+    Вспомогательная функция
+    Находит все коэфициенты которые точно равны нулю (по уравнениям =0)
+    :param sys: Система
+    :return: Множество нулевых коэфф.
+    """
     res_set = set()
     for tup in sys.values():
         if not tup[0]:
@@ -39,6 +67,11 @@ def creat_set_of_zero_coef(sys):
 
 
 def delete_false_from_system(sys):
+    """
+    Удаление уравнений  равных 0
+    :param sys: Система уравнений
+    :return: Обновленная система
+    """
     set_key_for_del = set()
     for key, (val, _) in sys.items():
         if not val:
@@ -48,6 +81,12 @@ def delete_false_from_system(sys):
 
 
 def delete_zero_coef_from_system(sys, zeros):
+    """
+    Вычеркиваем из уравнений с 1 значением функции все коэффициенты равные 0, из уравнений с 0 значениями f
+    :param sys:
+    :param zeros:
+    :return:
+    """
     for key, (bool_val, cur_set) in sys.items():
         new_set = cur_set - zeros
         sys[key] = (bool_val, new_set)
@@ -90,6 +129,10 @@ def get_final_coef_from_system(sys: dict):
 
 
 if __name__ == '__main__':
+    """
+    Аналог main() в C++
+    Вызывает необходимые функции в нужно порядке
+    """
     file_with_func = 'my.txt'
     func = read_func_from_file(file_with_func)
     system = create_system(func)
